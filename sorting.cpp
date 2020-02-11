@@ -17,17 +17,135 @@ double comparations, assignments, accesses, exchanges;
 bool bruteStatistics;
 
 typedef enum {
-    RANDOM_ARRAY = 1, RANDOM_PERMUTATION, FROM_KEYBOARD, ALMOST_SORTED, SORTED, REVERSED, BRUTE_TEST
-} ArrayTypes;
+    RANDOM_ARRAY = 1, RANDOM_PERMUTATION, FROM_KEYBOARD,
+    ALMOST_SORTED, SORTED, REVERSED, BRUTE_TEST
+} ArrayType;
+typedef enum {
+    INSERTION_SORT = 1, SELECTION_SORT, BUBBLE_SORT, BUBBLE_SORT_IMPROVED, COCKTAIL_SORT
+} SortType;
+typedef enum {
+    DEFAULT = 0, BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
+} Color;
 
 // **** General Functions ****
-
 void HitEnterClearingConsoleAndShowingMessage();
 void HitEnterToContinue();
 
-// **** Init functions ****
-void PrintInputArray();
+void BruteStatisticsManager(void (*sortFunc)()) {
+    int times;
 
+    statisticsMode = true;
+    showSteps = slowMode = false;
+
+    printf("Please, enter the array lenght: ");
+    scanf("%d", &n);
+    printf("How many times do you want to execute? ");
+    scanf("%d", &times);
+
+    printf("Hit ENTER to start...\n");
+    getchar();
+    getchar();
+    system("clear");
+
+    for (int i = 0; i < n; i++) a[i] = i+1; // creating the array
+
+    for (int k = 0; k < times; k++) {
+        printf("Times executed: %d\n", k);
+
+        for (int i = n-1; i >= 1; i--) swap(a[i], a[rand() % (i+1)]); // permutating
+
+        sortFunc();
+        system("clear");
+    }
+
+    // Taking the averege
+    accesses /= times;
+    assignments /= times;
+    comparations /= times;
+    exchanges /= times;
+}
+
+void HitEnterClearingConsoleAndShowingMessage() {
+    cin.ignore();
+    fflush(stdin);
+    printf("Hit enter key to continue...\n");
+    getchar();
+    system("clear");
+}
+
+void HitEnterToContinue() {
+    getchar();
+}
+
+// **** Printing Functions
+void PrintInputArray();
+void PrintColoredArray();
+void PrintOutputArray();
+void PrintStatistics();
+
+void PrintInputArray() {
+    char in;
+    do {
+        printf("Do you want to print it? (y/n) ");
+        scanf(" %c", &in);
+        if (in != 'y' && in != 'n') printf("Wrong input!\n"); 
+    } while (in != 'y' && in != 'n');
+
+    system("clear");
+    if (in == 'y') {
+        for (int i = 0; i < n; i++) printf("%d ", *(a+i));
+        printf("\n");
+        HitEnterClearingConsoleAndShowingMessage();
+    }
+}
+
+void PrintColoredArray() {
+    if (showSteps) {
+        for (int i = 0; i < n; i++) 
+            printf("\033[1;%sm%d \033[0m ", color[i].c_str(), *(a+i));
+        printf("\n");
+        if (slowMode) HitEnterToContinue();
+    }
+}
+
+void PrintOutputArray() {
+    printf("The output array is:\n");
+    for (int i = 0; i < n; i++) printf("%d ", *(a+i));
+    printf("\n");
+}
+
+void PrintStatistics() {
+    if (statisticsMode) {
+        printf("Accesses: %.0f\t\t\t%.4f * N\n"
+               "Assignments: %.0f\t\t%.4f * N\n"
+               "Comparations: %.0f\t\t%.4f * N\n"
+               "Exchanges: %.0f\t\t\t%.4f * N\n"
+               "lg(N) = %.3f\n"
+               "N = %d\n"
+               "Nlg(N) = %.3f\n"
+               "N^2 = %d\n"
+               "N^3 = %d\n",
+               accesses, accesses / n,
+               assignments,  assignments / n,
+               comparations, comparations / n,
+               exchanges, exchanges / n,
+               log(n), n, n*log(n), n*n, n*n*n
+        );
+    }
+}
+
+// **** Painting Functions ****
+inline void ResetArrayColor();
+inline void ColorElement(int index, Color c);
+
+inline void ResetArrayColor() {
+    for (int i = 0; i < n; i++) ColorElement(i, DEFAULT);
+}
+inline void ColorElement(int index, Color c) {
+    color[index] = to_string(c);
+}
+
+// **** Init Functions ****
 void RandomArray() {
     int max;
     printf("Please, enter N: ");
@@ -89,124 +207,141 @@ void ReversedArray() {
     for (int i = 0; i < n; i++) a[i] = n-i;
 }
 
-
-void PrintInputArray() {
-    char in;
-    do {
-        printf("Do you want to print it? (y/n) ");
-        scanf(" %c", &in);
-        if (in != 'y' && in != 'n') printf("Wrong input!\n"); 
-    } while (in != 'y' && in != 'n');
-
-    system("clear");
-    if (in == 'y') {
-        for (int i = 0; i < n; i++) printf("%d ", *(a+i));
-        printf("\n");
-        HitEnterClearingConsoleAndShowingMessage();
-    }
-}
-
-// **** Sort functions ****
-void PrintColoredArray();
-
+// **** Sort Functions ****
 void InsertionSort() {
-    for (int i = 1; i < n; i++) {
-        for (int k = 0; k < n; k++) color[k] = "0"; // default
-        color[i] = "32"; // green
+    int i, j, k, t;
+    for (i = 1; i < n; i++) {
+        ResetArrayColor();
+        ColorElement(i, GREEN);
 
-        int t = a[i]; accesses++; assignments++;
-        int j = i-1; 
+        t = a[i]; accesses++; assignments++;
+        j = i-1; 
 
         PrintColoredArray();
 
         comparations++; accesses++;
         while (a[j] > t) {
-            for (int i = 0; i < n; i++) color[i] = "0"; // default
-            color[j+1] = color[j] = "31"; // red
+            ResetArrayColor();
+            ColorElement(j+1, RED); ColorElement(j, RED);
             PrintColoredArray();
-            a[j+1] = a[j]; accesses += 2; assignments++; exchanges++;
+            a[j+1] = a[j]; accesses += 2; assignments++;
             PrintColoredArray();
             j--;
             comparations++; accesses++;
         }
         a[j+1] = t; accesses++; assignments++;
 
-        for (int i = 0; i < n; i++) color[i] = "0"; // default
-        color[j+1] = "32"; //green
+        ResetArrayColor();
+        ColorElement(j+1, GREEN);
         PrintColoredArray();
     }
 }
 
-void BruteStatisticsManager(void (*sortFunc)()) {
-    int times;
+void SelectionSort() {
+    int min, i, j, k;
+    for (i = 0; i < n-1; i++) {
+        ResetArrayColor();
+        min = i;
+        ColorElement(i, GREEN);
+        PrintColoredArray();
 
-    statisticsMode = true;
-    showSteps = slowMode = false;
+        for (j = i+1; j < n; j++) {
+            ResetArrayColor();
+            ColorElement(j, RED);
+            comparations++; accesses += 2;
+            if (a[j] < a[min]) {    
+                min = j;
+                ColorElement(j, BLUE);
+                comparations++; accesses += 2;
+            }
+            PrintColoredArray();
+        }
 
-    printf("Please, enter the array lenght: ");
-    scanf("%d", &n);
-    printf("How many times do you want to execute? ");
-    scanf("%d", &times);
-
-    printf("Hit ENTER to start...\n");
-    getchar();
-    getchar();
-    system("clear");
-
-    for (int i = 0; i < n; i++) a[i] = i+1; // creating the array
-
-    for (int k = 0; k < times; k++) {
-        printf("Times executed: %d\n", k);
-
-        for (int i = n-1; i >= 1; i--) swap(a[i], a[rand() % (i+1)]); // permutating
-
-        sortFunc();
-        system("clear");
-    }
-
-    // Taking the averege
-    accesses /= times;
-    assignments /= times;
-    comparations /= times;
-    exchanges /= times;
-}
-
-void PrintColoredArray() {
-    if (showSteps) {
-        for (int i = 0; i < n; i++) 
-            printf("\033[1;%sm%d \033[0m ", color[i].c_str(), *(a+i));
-        printf("\n");
-        if (slowMode) HitEnterToContinue();
+        ResetArrayColor();
+        ColorElement(i, RED); ColorElement(min, RED);
+        PrintColoredArray();
+        swap(a[i], a[min]); accesses += 2; exchanges++;
+        ColorElement(i, GREEN); 
+        PrintColoredArray();
     }
 }
 
-void PrintOutputArray() {
-    printf("\n\nThe output array is:\n");
-    for (int i = 0; i < n; i++) printf("%d ", *(a+i));
-    printf("\n");
-}
-
-void PrintStatistics() {
-    if (statisticsMode) {
-        printf("Accesses: %.0f\t\t\t%.4f * N\n"
-               "Assignments: %.0f\t\t%.4f * N\n"
-               "Comparations: %.0f\t\t%.4f * N\n"
-               "Exchanges: %.0f\t\t\t%.4f * N\n"
-               "lg(N) = %.3f\n"
-               "N = %d\n"
-               "Nlg(N) = %.3f\n"
-               "N^2 = %d\n"
-               "N^3 = %d\n",
-               accesses, accesses / n,
-               assignments,  assignments / n,
-               comparations, comparations / n,
-               exchanges, exchanges / n,
-               log(n), n, n*log(n), n*n, n*n*n
-        );
+void BubbleSort() {
+    int i, j;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n-1; j++) {
+            ResetArrayColor();
+            ColorElement(j, RED); ColorElement(j+1, RED);
+            PrintColoredArray();
+            comparations++; accesses += 2;
+            if (a[j] > a[j+1]) {
+                ColorElement(j, BLUE); ColorElement(j+1, BLUE);
+                swap(a[j], a[j+1]);
+                exchanges++; accesses += 2;
+                PrintColoredArray();
+            }
+        }
     }
 }
 
 
+void BubbleSortImproved() {
+    int i, j;
+    bool stop = false;
+    for (i = 0; i < n && !stop; i++) {
+        stop = true;
+        for (j = 0; j < n-1-i; j++) {
+            ResetArrayColor();
+            ColorElement(j, RED); ColorElement(j+1, RED);
+            PrintColoredArray();
+            comparations++; accesses += 2;
+            if (a[j] > a[j+1]) {
+                stop = false;
+                ColorElement(j, BLUE); ColorElement(j+1, BLUE);
+                swap(a[j], a[j+1]);
+                exchanges++; accesses += 2;
+                PrintColoredArray();
+            }
+        }
+    }
+}
+
+void CocktailSort() {
+    int i, j;
+    bool stop = false;
+    for (i = 0; i < n && !stop; i++) {
+        stop = true;
+        for (j = i; j < n-1-i; j++) {
+            ResetArrayColor();
+            ColorElement(j, RED); ColorElement(j+1, RED);
+            PrintColoredArray();
+            accesses += 2; comparations++;
+            if (a[j] > a[j+1]) {
+                stop = false;
+                ColorElement(j, BLUE); ColorElement(j+1, BLUE);
+                swap(a[j], a[j+1]);
+                accesses += 2; exchanges++;
+                PrintColoredArray();
+            }
+        }
+        j--;
+        for (; j >= i+1 && !stop; j--) {
+            ResetArrayColor();
+            ColorElement(j, RED); ColorElement(j-1, RED);
+            PrintColoredArray();
+            accesses += 2; comparations++;
+            if (a[j-1] > a[j]) {
+                stop = false;
+                ColorElement(j, BLUE); ColorElement(j-1, BLUE);
+                swap(a[j-1], a[j]);
+                accesses += 2; exchanges++;
+                PrintColoredArray();
+            }
+        }
+    }
+}
+
+// **** Main Function ****
 int main() {
     srand(time(NULL));
 
@@ -244,7 +379,7 @@ int main() {
     {  // Sorting algorithms
         typedef void (*SortMethod)();
         SortMethod sorts[] = {
-            InsertionSort
+            InsertionSort, SelectionSort, BubbleSort, BubbleSortImproved, CocktailSort
         };
 
         if (!bruteStatistics) {
@@ -283,10 +418,16 @@ int main() {
         printf("Which one do you want?\n");
         do {
             printf("0 - Exit\n"
-                "1 - Insertion Sort\n");
+                "1 - Insertion Sort\n"
+                "2 - Selection Sort\n"
+                "3 - Bubble Sort \n"
+                "4 - Bubble Sort Improved\n"
+                "5 - Cocktail Sort\n"
+            );
             scanf("%d", &in);
-            if (in < 0 || in > 1) printf("%d is not valid!\n", in);
-        } while (in < 0 || in > 1);
+            if (in < 0 || in > COCKTAIL_SORT) printf("%d is not valid!\n", in);
+        } while (in < 0 || in > COCKTAIL_SORT);
+        if (in == 0) return 0;
         system("clear");
         comparations = assignments = accesses = exchanges = 0;
         getchar();
@@ -299,16 +440,4 @@ int main() {
     PrintStatistics();
 
     return 0;
-}
-
-void HitEnterClearingConsoleAndShowingMessage() {
-    cin.ignore();
-    fflush(stdin);
-    printf("Hit enter key to continue...\n");
-    getchar();
-    system("clear");
-}
-
-void HitEnterToContinue() {
-    getchar();
 }
