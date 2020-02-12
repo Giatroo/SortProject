@@ -36,7 +36,7 @@ public:
 void HitEnterClearingConsoleAndShowingMessage();
 void HitEnterToContinue();
 
-void BruteStatisticsManager(void (*sortFunc)()) {
+void BruteStatisticsManager(SortAlgorithm sorting) {
     int times;
 
     statisticsMode = true;
@@ -59,7 +59,7 @@ void BruteStatisticsManager(void (*sortFunc)()) {
 
         for (int i = n-1; i >= 1; i--) swap(a[i], a[rand() % (i+1)]); // permutating
 
-        sortFunc();
+        sorting.func();
         system("clear");
     }
 
@@ -68,6 +68,7 @@ void BruteStatisticsManager(void (*sortFunc)()) {
     assignments /= times;
     comparations /= times;
     exchanges /= times;
+    printf("%s tested %d times.\n", sorting.name.c_str(), times);
 }
 
 void HitEnterClearingConsoleAndShowingMessage() {
@@ -107,7 +108,7 @@ void PrintInputArray() {
 void PrintColoredArray() {
     if (showSteps) {
         for (int i = 0; i < n; i++) 
-            printf("\033[1;%sm%d \033[0m ", color[i].c_str(), *(a+i));
+            printf("\033[1;%sm%d\033[0m ", color[i].c_str(), *(a+i));
         printf("\n");
         if (slowMode) HitEnterToContinue();
     }
@@ -346,6 +347,47 @@ void CocktailSort() {
     }
 }
 
+void ShellSort() {
+    int i, j, h, t;
+    for (h = n/2; h >= 1; h /= 2) {
+        for (i = h; i < n; i++) {
+            ResetArrayColor();
+            ColorElement(i, GREEN);
+
+            t = a[i]; accesses++; assignments++;
+            j = i;
+
+            ColorElement(j-h, RED);
+            PrintColoredArray();
+
+            comparations += 2; accesses++;
+            while (j >= h && t < a[j-h]) {
+                ColorElement(j, RED);
+
+                a[j] = a[j-h]; accesses += 2; assignments++;
+                j -= h;
+
+                PrintColoredArray();
+
+                ResetArrayColor();
+                if (j >= h) { ColorElement(j-h, RED); comparations++; accesses++; }
+
+                ColorElement(j, RED);
+                PrintColoredArray();
+
+                comparations++;
+            }
+
+            ResetArrayColor();
+
+            ColorElement(j, GREEN);
+            a[j] = t; accesses++; assignments++;
+            
+            PrintColoredArray();
+        }
+    }
+}
+
 // **** Main Function ****
 int main() {
     system("clear");
@@ -388,11 +430,9 @@ int main() {
             {"Selection Sort", SelectionSort},
             {"Bubble Sort", BubbleSort},
             {"Bubble Sort Improved", BubbleSortImproved},
-            {"Cocktail Sort", CocktailSort}
+            {"Cocktail Sort", CocktailSort},
+            {"Shell Sort", ShellSort}
         };
-        /*SortMethod sorts[] = {
-            InsertionSort, SelectionSort, BubbleSort, BubbleSortImproved, CocktailSort
-        };*/
 
         if (!bruteStatistics) {
             // Asking if the user wants to display the steps or not
@@ -444,7 +484,7 @@ int main() {
         if (!bruteStatistics) {
             sorts[in-1].func();
             PrintOutputArray();
-        } else BruteStatisticsManager(sorts[in-1].func);
+        } else BruteStatisticsManager(sorts[in-1]);
     }
 
     PrintStatistics();
