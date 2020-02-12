@@ -3,6 +3,7 @@
 #include <time.h>
 #include <math.h>
 #include <algorithm>
+#include <vector>
 
 using namespace std;
 
@@ -21,11 +22,15 @@ typedef enum {
     ALMOST_SORTED, SORTED, REVERSED, BRUTE_TEST
 } ArrayType;
 typedef enum {
-    INSERTION_SORT = 1, SELECTION_SORT, BUBBLE_SORT, BUBBLE_SORT_IMPROVED, COCKTAIL_SORT
-} SortType;
-typedef enum {
     DEFAULT = 0, BLACK = 30, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
 } Color;
+typedef void (*SortMethod)();
+
+class SortAlgorithm {
+public:
+    string name;
+    SortMethod func;
+};
 
 // **** General Functions ****
 void HitEnterClearingConsoleAndShowingMessage();
@@ -205,6 +210,7 @@ void ReversedArray() {
     scanf("%d", &n);
     printf("Creating the array...\n");
     for (int i = 0; i < n; i++) a[i] = n-i;
+    printf("Created\n");
 }
 
 // **** Sort Functions ****
@@ -284,7 +290,6 @@ void BubbleSort() {
     }
 }
 
-
 void BubbleSortImproved() {
     int i, j;
     bool stop = false;
@@ -343,6 +348,7 @@ void CocktailSort() {
 
 // **** Main Function ****
 int main() {
+    system("clear");
     srand(time(NULL));
 
     {   // Initializing the array
@@ -365,8 +371,9 @@ int main() {
             scanf("%d", &in);
             if (in < 0 || in > BRUTE_TEST) printf("%d is not valid!\n", in); 
         } while (in < 0 || in > BRUTE_TEST);
-        
-        if (in == 0) return 0;
+
+        system("clear");
+        if (in == 0)  return 0; 
         if (in != BRUTE_TEST) {
             inits[in-1]();
             PrintInputArray();
@@ -374,13 +381,18 @@ int main() {
         if (in == BRUTE_TEST) bruteStatistics = true;
     }
 
-    
 
     {  // Sorting algorithms
-        typedef void (*SortMethod)();
-        SortMethod sorts[] = {
-            InsertionSort, SelectionSort, BubbleSort, BubbleSortImproved, CocktailSort
+        vector<SortAlgorithm> sorts = {
+            {"Insertion Sort", InsertionSort},
+            {"Selection Sort", SelectionSort},
+            {"Bubble Sort", BubbleSort},
+            {"Bubble Sort Improved", BubbleSortImproved},
+            {"Cocktail Sort", CocktailSort}
         };
+        /*SortMethod sorts[] = {
+            InsertionSort, SelectionSort, BubbleSort, BubbleSortImproved, CocktailSort
+        };*/
 
         if (!bruteStatistics) {
             // Asking if the user wants to display the steps or not
@@ -413,28 +425,26 @@ int main() {
         } else 
             statisticsMode = true;
         
+        system("clear");
         // Asking for the sort method
         int in = -1;
         printf("Which one do you want?\n");
         do {
-            printf("0 - Exit\n"
-                "1 - Insertion Sort\n"
-                "2 - Selection Sort\n"
-                "3 - Bubble Sort \n"
-                "4 - Bubble Sort Improved\n"
-                "5 - Cocktail Sort\n"
-            );
+            printf("0 - Exit\n");
+            for (int i = 0; i < sorts.size(); i++) 
+                printf("%d - %s\n", i+1, sorts[i].name.c_str());
+
             scanf("%d", &in);
-            if (in < 0 || in > COCKTAIL_SORT) printf("%d is not valid!\n", in);
-        } while (in < 0 || in > COCKTAIL_SORT);
-        if (in == 0) return 0;
+            if (in < 0 || in > sorts.size()) printf("%d is not valid!\n", in);
+        } while (in < 0 || in > sorts.size());
         system("clear");
+        if (in == 0) return 0;
         comparations = assignments = accesses = exchanges = 0;
         getchar();
         if (!bruteStatistics) {
-            sorts[in-1]();
+            sorts[in-1].func();
             PrintOutputArray();
-        } else BruteStatisticsManager(sorts[in-1]);
+        } else BruteStatisticsManager(sorts[in-1].func);
     }
 
     PrintStatistics();
