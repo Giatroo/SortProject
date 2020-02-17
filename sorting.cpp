@@ -389,17 +389,14 @@ void ShellSort() {
 }
 
 void quick(int l, int r);
-int particion(int l, int r);
-
 void QuickSort() {
     quick(0, n-1);
 }
-
 void quick(int l = 0, int r = n-1) {
     int i, j, pivot;
 
     if (l < r) {
-        i = l-1, j = r, pivot = a[r]; accesses++;
+        i = l-1, j = r, pivot = a[r]; accesses++; assignments++;
 
         ResetArrayColor();
         ColorElement(r, GREEN);
@@ -448,6 +445,61 @@ void quick(int l = 0, int r = n-1) {
     }
 }
 
+int w[N];
+void merge(int l, int r);
+void mergesort(int l, int r);
+void MergeSort() {
+    mergesort(0, n-1);
+}
+void mergesort(int l, int r) {
+    if (l < r) {
+        int m = l + (r-l)/2;
+        ResetArrayColor();
+        ColorElement(l, BLUE); ColorElement(m, BLUE);
+        PrintColoredArray();
+        mergesort(l, m);
+
+        ResetArrayColor();
+        ColorElement(m+1, BLUE); ColorElement(r, BLUE);
+        PrintColoredArray();
+        mergesort(m+1, r);
+        merge(l, r);
+    }
+}
+void merge(int l, int r) {
+    if (l < r) {
+        int i, j, k;
+        int m = l + (r-l)/2;
+
+        for (i = l; i <= m; i++) {
+            w[i] = a[i]; accesses += 2; assignments++;
+            ResetArrayColor();
+            ColorElement(i, RED);
+            PrintColoredArray();
+        }
+        for (j = r; j > m; i++, j--) {
+            w[j] = a[i]; accesses += 2; assignments++;
+            ResetArrayColor();
+            ColorElement(j, RED);
+            PrintColoredArray();
+        }
+
+        i = k = l; j = r;
+
+        for (; k <= r; k++) {
+            ResetArrayColor();
+            comparations++; accesses += 2;
+            if (i > m || w[i] >= w[j]) {
+                a[k] = w[j--]; accesses += 2; assignments++;
+            } else if (j <= m || w[i] <= w[j]) {
+                a[k] = w[i++]; accesses += 2; assignments++;
+            }
+            ColorElement(k, RED);
+            PrintColoredArray();
+        }
+    }
+}
+
 // **** Main Function ****
 int main() {
     system("clear");
@@ -492,7 +544,8 @@ int main() {
             {"Bubble Sort Improved", BubbleSortImproved},
             {"Cocktail Sort", CocktailSort},
             {"Shell Sort", ShellSort},
-            {"Quick Sort", QuickSort}
+            {"Quick Sort", QuickSort},
+            {"Merge Sort", MergeSort}
         };
 
         if (!bruteStatistics) {
