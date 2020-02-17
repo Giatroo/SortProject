@@ -388,6 +388,66 @@ void ShellSort() {
     }
 }
 
+void quick(int l, int r);
+int particion(int l, int r);
+
+void QuickSort() {
+    quick(0, n-1);
+}
+
+void quick(int l = 0, int r = n-1) {
+    int i, j, pivot;
+
+    if (l < r) {
+        i = l-1, j = r, pivot = a[r]; accesses++;
+
+        ResetArrayColor();
+        ColorElement(r, GREEN);
+        PrintColoredArray();
+
+        while (1) {
+            accesses++; comparations++;
+            while (a[++i] < pivot) {
+                ResetArrayColor();
+                ColorElement(r, GREEN); ColorElement(i, RED);
+                PrintColoredArray();
+                accesses++; comparations++;
+            }
+
+            ResetArrayColor();
+            ColorElement(r, GREEN); ColorElement(i, BLUE);
+            PrintColoredArray();
+
+            accesses++; comparations++;
+            while (a[--j] > pivot) {
+                ResetArrayColor();
+                ColorElement(r, GREEN); ColorElement(i, BLUE); ColorElement(j, RED);
+                PrintColoredArray();
+                if (j == l) break;
+                accesses++; comparations++;
+            }
+
+            comparations++;
+            if (i >= j || j == l) break;
+            ResetArrayColor();
+            ColorElement(r, GREEN); ColorElement(i, BLUE); ColorElement(j, BLUE);
+            PrintColoredArray();
+            swap(a[i], a[j]); exchanges++; accesses += 2;
+
+            PrintColoredArray();
+        }
+
+        ResetArrayColor();
+        ColorElement(i, BLUE); ColorElement(r, BLUE);
+        PrintColoredArray();
+        swap(a[i], a[r]); exchanges++; accesses += 2;
+        PrintColoredArray();
+
+        quick(l, i-1);
+        quick(i+1, r);
+    }
+}
+
 // **** Main Function ****
 int main() {
     system("clear");
@@ -406,7 +466,7 @@ int main() {
                 "1 - Random Array\n"
                 "2 - Random Permutation of (1, 2...N)\n"
                 "3 - Digit array\n"
-                "4 - Almosted sorted array\n"
+                "4 - Almost sorted array\n"
                 "5 - Sorted array\n"
                 "6 - Reversed array\n"
                 "7 - Test lots of times\n");
@@ -431,7 +491,8 @@ int main() {
             {"Bubble Sort", BubbleSort},
             {"Bubble Sort Improved", BubbleSortImproved},
             {"Cocktail Sort", CocktailSort},
-            {"Shell Sort", ShellSort}
+            {"Shell Sort", ShellSort},
+            {"Quick Sort", QuickSort}
         };
 
         if (!bruteStatistics) {
